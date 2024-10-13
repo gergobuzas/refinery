@@ -4,12 +4,15 @@ import jakarta.websocket.server.ServerEndpoint;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
-@ServerEndpoint("/ws")
-@WebSocket(autoDemand = false)
+
+@WebSocket(autoDemand = true)
 public class GeneratorServerEndpoint {
+	private static final Logger LOG = LoggerFactory.getLogger(GeneratorServerEndpoint.class);
 	private Session session;
 
 	@OnWebSocketOpen
@@ -22,11 +25,11 @@ public class GeneratorServerEndpoint {
 		this.session = session;
 
 		// You may configure the session.
-		session.setMaxTextMessageSize(16 * 1024);
+		this.session.setMaxTextMessageSize(16 * 1024);
 
 		// You may immediately send a message to the remote peer.
-		session.sendText("connected", Callback.from(session::demand, Throwable::printStackTrace));
-		session.demand();
+		this.session.sendText("connected", Callback.NOOP);
+		//this.session.demand();
 	}
 
 	@OnWebSocketMessage
@@ -39,13 +42,11 @@ public class GeneratorServerEndpoint {
 		if (message.startsWith("echo:"))
 		{
 			// Only demand for more events when sendText() is completed successfully.
-			session.sendText(message.substring("echo:".length()), Callback.from(session::demand, Throwable::printStackTrace));
+			//Callback.from(session::demand, Throwable::printStackTrace)
+			session.sendText(message.substring("echo:".length()), Callback.NOOP);
 		}
-		else
-		{
-			// Discard the message, and demand for more events.
-			session.demand();
-		}
+		// Discard the message, and demand for more events.
+		//session.demand();
 	}
 
 	@OnWebSocketMessage
@@ -71,7 +72,7 @@ public class GeneratorServerEndpoint {
 		callback.succeed();
 
 		// Demand for more events.
-		session.demand();
+		//session.demand();
 	}
 
 	@OnWebSocketError

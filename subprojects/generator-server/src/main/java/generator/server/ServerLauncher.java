@@ -6,8 +6,9 @@ package generator.server;
 
 
 
+import jakarta.websocket.server.ServerEndpointConfig;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer;
+import org.eclipse.jetty.ee10.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.eclipse.jetty.server.Server;
 
 
@@ -17,16 +18,19 @@ public class ServerLauncher {
 		Server server = new Server(8080);
 
 		// Create a ServletContextHandler with the given context path.
-		ServletContextHandler handler = new ServletContextHandler("/ctx");
+		ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
+		handler.setContextPath("/");
+		server.setHandler(handler);
 
 		// Ensure that JavaxWebSocketServletContainerInitializer is initialized,
 		// to set up the ServerContainer for this web application context.
-		JakartaWebSocketServletContainerInitializer.configure(handler, null);
+		JettyWebSocketServletContainerInitializer.configure(handler, null);
+
 
 		// Add a WebSocket-initializer Servlet to register WebSocket endpoints.
-		handler.addServlet(GeneratorServerInitServlet.class, "/");
+		handler.addServlet(GeneratorServerInitServlet.class, "/echo");
 
-		server.setHandler(handler);
+
 		// Starting the Server will start the ServletContextHandler.
 		System.out.println("Starting server...");
 		server.start();
