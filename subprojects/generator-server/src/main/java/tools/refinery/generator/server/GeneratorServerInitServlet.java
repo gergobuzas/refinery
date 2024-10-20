@@ -1,4 +1,4 @@
-package generator.server;
+package tools.refinery.generator.server;
 
 
 import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;

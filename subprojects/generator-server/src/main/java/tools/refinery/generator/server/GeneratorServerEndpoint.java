@@ -1,6 +1,5 @@
-package generator.server;
+package tools.refinery.generator.server;
 
-import jakarta.websocket.server.ServerEndpoint;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
@@ -8,12 +7,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 
 
 @WebSocket(autoDemand = true)
 public class GeneratorServerEndpoint {
 	private static final Logger LOG = LoggerFactory.getLogger(GeneratorServerEndpoint.class);
 	private Session session;
+	private HashMap<Integer, Session> sessionHashMap = new HashMap<>();
 
 	@OnWebSocketOpen
 	public void onWebSocketOpen(Session session)
@@ -35,6 +36,7 @@ public class GeneratorServerEndpoint {
 	@OnWebSocketMessage
 	public void onWebSocketText(String message)
 	{
+		//TODO Gson read of json, then put the uuid of document to session hashMap with session
 		System.out.println("onTextMessage");
 		// A WebSocket text message is received.
 

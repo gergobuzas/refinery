@@ -13,13 +13,14 @@ import org.eclipse.xtext.web.server.model.DocumentSynchronizer;
 import org.eclipse.xtext.web.server.model.XtextWebDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.refinery.generator.web.library.IPush;
 import tools.refinery.language.web.generator.ModelGenerationManager;
 import tools.refinery.language.web.xtext.server.ResponseHandlerException;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class PushWebDocument extends XtextWebDocument {
+public class PushWebDocument extends XtextWebDocument implements IPush {
 	private static final Logger LOG = LoggerFactory.getLogger(PushWebDocument.class);
 
 	private final List<PrecomputationListener> precomputationListeners = new ArrayList<>();

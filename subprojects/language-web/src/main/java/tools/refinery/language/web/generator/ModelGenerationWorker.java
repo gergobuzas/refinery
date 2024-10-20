@@ -10,6 +10,7 @@ import org.eclipse.xtext.service.OperationCanceledManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.refinery.generator.*;
+import tools.refinery.generator.web.library.IGenerationWorker;
 import tools.refinery.language.web.semantics.metadata.MetadataCreator;
 import tools.refinery.language.web.semantics.PartialInterpretation2Json;
 import tools.refinery.language.web.xtext.server.ThreadPoolExecutorServiceProvider;
@@ -21,7 +22,7 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.*;
 
-public class ModelGenerationWorker implements Runnable {
+public class ModelGenerationWorker implements Runnable, IGenerationWorker {
 	private static final Logger LOG = LoggerFactory.getLogger(ModelGenerationWorker.class);
 
 	private final UUID uuid = UUID.randomUUID();

@@ -15,6 +15,7 @@ include(
 		"generator",
 		"generator-cli",
 		"generator-server",
+		"generator-web-library",
 		"gradle-plugins",
 		"interpreter",
 		"interpreter-localsearch",

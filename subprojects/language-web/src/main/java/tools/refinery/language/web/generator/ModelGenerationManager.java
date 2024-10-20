@@ -6,10 +6,12 @@
 package tools.refinery.language.web.generator;
 
 import org.eclipse.xtext.util.CancelIndicator;
+import tools.refinery.generator.web.library.IGenerationWorker;
 
 public class ModelGenerationManager {
 	private final Object lockObject = new Object();
 	private ModelGenerationWorker worker;
+	private ModelRemoteGenerationWorker remoteWorker;
 	private boolean disposed;
 
 	boolean setActiveModelGenerationWorker(ModelGenerationWorker worker, CancelIndicator cancelIndicator) {
@@ -23,11 +25,26 @@ public class ModelGenerationManager {
 		return false;
 	}
 
+	boolean setActiveModelGenerationWorker(ModelRemoteGenerationWorker worker, CancelIndicator cancelIndicator) {
+		synchronized (lockObject) {
+			cancel();
+			if (disposed || cancelIndicator.isCanceled()) {
+				return true;
+			}
+			this.remoteWorker = worker;
+		}
+		return false;
+	}
+
 	public void cancel() {
 		synchronized (lockObject) {
 			if (worker != null) {
 				worker.cancel();
 				worker = null;
+			}
+			if (remoteWorker != null) {
+				remoteWorker.cancel();
+				remoteWorker = null;
 			}
 		}
 	}
