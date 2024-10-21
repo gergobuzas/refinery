@@ -1,0 +1,56 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "java",
+			"name": "Current File",
+			"request": "launch",
+			"mainClass": "${file}"
+		},
+		{
+			"type": "java",
+			"name": "DemoApplication",
+			"request": "launch",
+			"mainClass": "tools.refinery.spring.demo.DemoApplication",
+			"projectName": "demo"
+		},
+		{
+			"type": "java",
+			"name": "RefineryCli",
+			"request": "launch",
+			"mainClass": "tools.refinery.generator.cli.RefineryCli",
+			"projectName": "generator-cli"
+		},
+		{
+			"type": "java",
+			"name": "ModelGenerationTest",
+			"request": "launch",
+			"mainClass": "tools.refinery.language.semantics.ModelGenerationTest",
+			"projectName": "language-semantics"
+		},
+		{
+			"type": "java",
+			"name": "ServerLauncher",
+			"request": "launch",
+			"mainClass": "tools.refinery.language.web.ServerLauncher",
+			"projectName": "language-web"
+		},
+		{
+			"type": "java",
+			"name": "SpringdemoApplication",
+			"request": "launch",
+			"mainClass": "tools.refinery.springdemo.SpringdemoApplication",
+			"projectName": "springdemo"
+		},
+		{
+			"type": "java",
+			"name": "HashEfficiencyTest",
+			"request": "launch",
+			"mainClass": "tools.refinery.store.model.hashtests.HashEfficiencyTest",
+			"projectName": "store"
+		}
+	]
+}

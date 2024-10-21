@@ -3,7 +3,7 @@ package tools.refinery.generator.web.library;
 import org.eclipse.xtext.util.CancelIndicator;
 import org.eclipse.xtext.web.server.IServiceResult;
 import org.eclipse.xtext.web.server.model.AbstractCachedService;
-import tools.refinery.language.web.generator.ModelGenerationManager;
+import tools.refinery.language.web.xtext.ModelGenerationManager;
 import tools.refinery.language.web.xtext.server.push.PrecomputationListener;
 
 public interface IPush {
@@ -18,7 +18,7 @@ public interface IPush {
 																   CancelIndicator cancelIndicator,
 																   boolean logCacheMiss);
 
-	public <T extends IServiceResult> void notifyPrecomputationListeners(String serviceName, T result);
+	public <T extends IServiceResult> void notifyPrecomputationListeners(String serviceName, ModelGenerationResult result);
 
 	public void cancelModelGeneration();
 

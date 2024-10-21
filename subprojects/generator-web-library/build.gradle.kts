@@ -8,6 +8,7 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
 	id("tools.refinery.gradle.java-application")
+	id("tools.refinery.gradle.xtext-generated")
 }
 
 repositories {
@@ -17,6 +18,13 @@ repositories {
 
 dependencies {
     implementation(libs.guava)
+	implementation(project(":refinery-language"))
+	implementation(project(":refinery-language-ide"))
+	implementation(project(":refinery-language-web-xtext"))
+	implementation(project(":refinery-language-semantics"))
+	implementation(project(":refinery-store-reasoning-scope"))
+	implementation(libs.xtext.web)
+	xtextGenerated(project(":refinery-language", "generatedWebSources"))
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

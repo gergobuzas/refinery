@@ -14,7 +14,7 @@ import org.eclipse.xtext.web.server.XtextServiceDispatcher;
 import org.eclipse.xtext.web.server.model.IWebDocumentProvider;
 import org.eclipse.xtext.web.server.model.XtextWebDocumentAccess;
 import org.eclipse.xtext.web.server.occurrences.OccurrencesService;
-import tools.refinery.language.web.occurrences.ProblemOccurrencesService;
+import tools.refinery.generator.web.library.occurrences.ProblemOccurrencesService;
 import tools.refinery.language.web.xtext.server.ThreadPoolExecutorServiceProvider;
 import tools.refinery.language.web.xtext.server.push.PushServiceDispatcher;
 import tools.refinery.language.web.xtext.server.push.PushWebDocumentAccess;

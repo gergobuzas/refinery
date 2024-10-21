@@ -1,0 +1,11 @@
+/*
+ * SPDX-FileCopyrightText: 2023 The Refinery Authors <https://refinery.tools/>
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+package tools.refinery.generator.web.library;
+
+import org.eclipse.xtext.web.server.IServiceResult;
+
+public record ModelGenerationCancelledResult() implements IServiceResult {
+}

@@ -12,8 +12,10 @@ import org.eclipse.xtext.service.OperationCanceledManager;
 import org.eclipse.xtext.util.CancelIndicator;
 import org.eclipse.xtext.util.concurrent.CancelableUnitOfWork;
 import org.eclipse.xtext.web.server.model.IXtextWebDocument;
-import tools.refinery.generator.web.library.IGenerationWorker;
-import tools.refinery.language.web.semantics.SemanticsService;
+import tools.refinery.generator.web.library.ModelGenerationCancelledResult;
+import tools.refinery.generator.web.library.ModelGenerationStartedResult;
+import tools.refinery.generator.web.library.ModelGenerationWorker;
+import tools.refinery.generator.web.library.semantics.SemanticsService;
 import tools.refinery.language.web.xtext.server.push.PushWebDocument;
 import tools.refinery.language.web.xtext.server.push.PushWebDocumentAccess;
 

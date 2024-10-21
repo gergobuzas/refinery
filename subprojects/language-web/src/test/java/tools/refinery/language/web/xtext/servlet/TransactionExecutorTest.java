@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
-import tools.refinery.language.web.semantics.SemanticsService;
+import tools.refinery.generator.web.library.semantics.SemanticsService;
 import tools.refinery.language.web.tests.AwaitTerminationExecutorServiceProvider;
 import tools.refinery.language.web.tests.ProblemWebInjectorProvider;
 import tools.refinery.language.web.xtext.server.ResponseHandler;

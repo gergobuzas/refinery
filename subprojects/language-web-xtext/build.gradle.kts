@@ -5,7 +5,6 @@
  */
 
 plugins {
-	id("tools.refinery.gradle.java-application")
 	id("tools.refinery.gradle.xtext-generated")
 }
 
@@ -17,7 +16,6 @@ val webapp: Configuration by configurations.creating {
 dependencies {
 	implementation(project(":refinery-generator"))
 	implementation(project(":refinery-language"))
-	implementation(project(":refinery-language-web-xtext"))
 	implementation(project(":refinery-language-ide"))
 	implementation(project(":refinery-store-reasoning-scope"))
 	implementation(project(":refinery-generator-web-library"))
@@ -35,37 +33,3 @@ dependencies {
 	testImplementation(libs.jetty.websocket.client)
 }
 
-application {
-	mainClass.set("tools.refinery.language.web.ServerLauncher")
-}
-
-tasks {
-	jar {
-		dependsOn(webapp)
-		from(webapp) {
-			into("webapp")
-		}
-	}
-
-	register<JavaExec>("serve") {
-		dependsOn(webapp)
-		val mainRuntimeClasspath = sourceSets.main.map { it.runtimeClasspath }
-		dependsOn(mainRuntimeClasspath)
-		classpath(mainRuntimeClasspath)
-		mainClass.set(application.mainClass)
-		standardInput = System.`in`
-		environment("REFINERY_BASE_RESOURCE", webapp.singleFile)
-		group = "run"
-		description = "Start a Jetty web server serving the Xtext API and assets."
-	}
-
-	register<JavaExec>("serveBackend") {
-		val mainRuntimeClasspath = sourceSets.main.map { it.runtimeClasspath }
-		dependsOn(mainRuntimeClasspath)
-		classpath(mainRuntimeClasspath)
-		mainClass.set(application.mainClass)
-		standardInput = System.`in`
-		group = "run"
-		description = "Start a Jetty web server serving the Xtext API without assets."
-	}
-}

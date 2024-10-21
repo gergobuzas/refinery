@@ -26,6 +26,7 @@ include(
 		"language-model",
 		"language-semantics",
 		"language-web",
+		"language-web-xtext",
 		"logic",
 		"store",
 		"store-dse",
