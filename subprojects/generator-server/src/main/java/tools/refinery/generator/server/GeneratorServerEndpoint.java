@@ -8,13 +8,13 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.UUID;
 
 
 @WebSocket(autoDemand = true)
 public class GeneratorServerEndpoint {
 	private static final Logger LOG = LoggerFactory.getLogger(GeneratorServerEndpoint.class);
-	private Session session;
-	private HashMap<Integer, Session> sessionHashMap = new HashMap<>();
+	private HashMap<UUID, Session> sessionHashMap = new HashMap<>();
 
 	@OnWebSocketOpen
 	public void onWebSocketOpen(Session session)
@@ -23,14 +23,12 @@ public class GeneratorServerEndpoint {
 		System.out.println("onOpen");
 
 		// Store the session to be able to send data to the remote peer.
-		this.session = session;
-
-		// You may configure the session.
-		this.session.setMaxTextMessageSize(16 * 1024);
+		String uuidOfWorkerString = session.getUpgradeRequest().getHeader("UUID");
+		UUID uuidOfWorker = UUID.fromString(uuidOfWorkerString);
+		sessionHashMap.put(uuidOfWorker, session);
 
 		// You may immediately send a message to the remote peer.
-		this.session.sendText("connected", Callback.NOOP);
-		//this.session.demand();
+		sessionHashMap.get(uuidOfWorker).sendText("Connected", Callback.NOOP);
 	}
 
 	@OnWebSocketMessage
@@ -45,7 +43,7 @@ public class GeneratorServerEndpoint {
 		{
 			// Only demand for more events when sendText() is completed successfully.
 			//Callback.from(session::demand, Throwable::printStackTrace)
-			session.sendText(message.substring("echo:".length()), Callback.NOOP);
+			//session.sendText(message.substring("echo:".length()), Callback.NOOP);
 		}
 		// Discard the message, and demand for more events.
 		//session.demand();
