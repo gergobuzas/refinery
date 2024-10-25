@@ -1,6 +1,5 @@
-package tools.refinery.generator.web.library;
+package tools.refinery.language.web.generator;
 
-import tools.refinery.language.web.generator.ModelGenerationResult;
 import tools.refinery.language.web.xtext.server.push.PushWebDocument;
 
 import java.io.IOException;

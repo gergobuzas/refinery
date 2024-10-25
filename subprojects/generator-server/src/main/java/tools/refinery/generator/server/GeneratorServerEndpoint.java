@@ -14,7 +14,7 @@ import java.util.UUID;
 @WebSocket(autoDemand = true)
 public class GeneratorServerEndpoint {
 	private static final Logger LOG = LoggerFactory.getLogger(GeneratorServerEndpoint.class);
-	private HashMap<UUID, Session> sessionHashMap = new HashMap<>();
+	private Session session;
 
 	@OnWebSocketOpen
 	public void onWebSocketOpen(Session session)
@@ -23,12 +23,10 @@ public class GeneratorServerEndpoint {
 		System.out.println("onOpen");
 
 		// Store the session to be able to send data to the remote peer.
-		String uuidOfWorkerString = session.getUpgradeRequest().getHeader("UUID");
-		UUID uuidOfWorker = UUID.fromString(uuidOfWorkerString);
-		sessionHashMap.put(uuidOfWorker, session);
+		this.session = session;
 
 		// You may immediately send a message to the remote peer.
-		sessionHashMap.get(uuidOfWorker).sendText("Connected", Callback.NOOP);
+		session.sendText("Connected", Callback.NOOP);
 	}
 
 	@OnWebSocketMessage
@@ -37,7 +35,7 @@ public class GeneratorServerEndpoint {
 		//TODO Gson read of json, then put the uuid of document to session hashMap with session
 		System.out.println("onTextMessage");
 		// A WebSocket text message is received.
-
+		session.sendText(message.substring("echo:".length()), Callback.NOOP);
 		// You may echo it back if it matches certain criteria.
 		if (message.startsWith("echo:"))
 		{

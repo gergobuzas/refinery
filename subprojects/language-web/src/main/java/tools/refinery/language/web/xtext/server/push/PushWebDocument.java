@@ -13,7 +13,7 @@ import org.eclipse.xtext.web.server.model.DocumentSynchronizer;
 import org.eclipse.xtext.web.server.model.XtextWebDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tools.refinery.generator.web.library.IPush;
+import tools.refinery.language.web.generator.IPush;
 import tools.refinery.language.web.generator.ModelGenerationManager;
 import tools.refinery.language.web.xtext.server.ResponseHandlerException;
 

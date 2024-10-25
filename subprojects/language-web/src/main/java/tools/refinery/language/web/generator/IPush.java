@@ -1,9 +1,8 @@
-package tools.refinery.generator.web.library;
+package tools.refinery.language.web.generator;
 
 import org.eclipse.xtext.util.CancelIndicator;
 import org.eclipse.xtext.web.server.IServiceResult;
 import org.eclipse.xtext.web.server.model.AbstractCachedService;
-import tools.refinery.language.web.generator.ModelGenerationManager;
 import tools.refinery.language.web.xtext.server.push.PrecomputationListener;
 
 public interface IPush {

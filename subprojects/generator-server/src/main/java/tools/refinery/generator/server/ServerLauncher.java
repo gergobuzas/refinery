@@ -27,8 +27,7 @@ public class ServerLauncher {
 
 
 		// Add a WebSocket-initializer Servlet to register WebSocket endpoints.
-		handler.addServlet(GeneratorServerInitServlet.class, "/echo");
-
+		handler.addServlet(GeneratorServerInitServlet.class, "/");
 
 		// Starting the Server will start the ServletContextHandler.
 		System.out.println("Starting server...");

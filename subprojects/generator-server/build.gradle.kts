@@ -26,6 +26,9 @@ dependencies {
     // This dependency is used by the application.
     implementation(libs.guava)
 	//implementation("org.eclipse.jetty.websocket:jetty-websocket-jetty-server:12.0.15-SNAPSHOT")
+	implementation(project(":refinery-generator"))
+	implementation(project(":refinery-language-web"))
+	implementation(libs.gson)
 	implementation(libs.jetty.server)
 	implementation(libs.jetty.servlet)
 	implementation(libs.jetty.websocket.api)

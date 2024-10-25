@@ -10,7 +10,6 @@ import org.eclipse.xtext.service.OperationCanceledManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.refinery.generator.*;
-import tools.refinery.generator.web.library.IGenerationWorker;
 import tools.refinery.language.web.semantics.metadata.MetadataCreator;
 import tools.refinery.language.web.semantics.PartialInterpretation2Json;
 import tools.refinery.language.web.xtext.server.ThreadPoolExecutorServiceProvider;

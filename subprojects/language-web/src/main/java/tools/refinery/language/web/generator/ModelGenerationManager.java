@@ -6,7 +6,6 @@
 package tools.refinery.language.web.generator;
 
 import org.eclipse.xtext.util.CancelIndicator;
-import tools.refinery.generator.web.library.IGenerationWorker;
 
 public class ModelGenerationManager {
 	private final Object lockObject = new Object();
