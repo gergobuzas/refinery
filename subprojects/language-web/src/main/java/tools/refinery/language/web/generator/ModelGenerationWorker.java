@@ -124,6 +124,7 @@ public class ModelGenerationWorker implements Runnable, IGenerationWorker {
 			}
 			return;
 		}
+		System.out.println(result);
 		notifyResult(result);
 	}
 
@@ -153,10 +154,13 @@ public class ModelGenerationWorker implements Runnable, IGenerationWorker {
 		cancellationToken.checkCancelled();
 		metadataCreator.setProblemTrace(generator.getProblemTrace());
 		var nodesMetadata = metadataCreator.getNodesMetadata(generator.getModel(), Concreteness.CANDIDATE);
+		System.out.println(nodesMetadata);
 		cancellationToken.checkCancelled();
 		var relationsMetadata = metadataCreator.getRelationsMetadata();
+		System.out.println(relationsMetadata);
 		cancellationToken.checkCancelled();
 		var partialInterpretation = partialInterpretation2Json.getPartialInterpretation(generator, cancellationToken);
+		System.out.println(partialInterpretation);
 		return new ModelGenerationSuccessResult(uuid, nodesMetadata, relationsMetadata, partialInterpretation);
 	}
 

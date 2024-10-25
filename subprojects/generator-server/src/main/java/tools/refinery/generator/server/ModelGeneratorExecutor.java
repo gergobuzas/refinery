@@ -1,9 +1,11 @@
 package tools.refinery.generator.server;
 
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.xtext.service.OperationCanceledManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.refinery.generator.GeneratorResult;
@@ -13,6 +15,7 @@ import tools.refinery.generator.ProblemLoader;
 import tools.refinery.language.model.problem.Problem;
 import tools.refinery.language.web.semantics.PartialInterpretation2Json;
 import tools.refinery.language.web.semantics.metadata.MetadataCreator;
+import tools.refinery.language.web.semantics.metadata.NodeMetadata;
 import tools.refinery.language.web.semantics.metadata.RelationMetadata;
 import tools.refinery.store.reasoning.literal.Concreteness;
 
@@ -30,9 +33,9 @@ public class ModelGeneratorExecutor extends Thread {
 	private static final Logger LOG = LoggerFactory.getLogger(ModelGeneratorExecutor.class);
 
 	@Inject
-	private Provider<ModelGeneratorFactory> factoryProvider;
+	private ModelGeneratorFactory factory;
 	@Inject
-	private Provider<ProblemLoader> problemLoaderProvider;
+	private ProblemLoader problemLoader;
 	@Inject
 	private MetadataCreator metadataCreator;
 	@Inject
@@ -45,7 +48,7 @@ public class ModelGeneratorExecutor extends Thread {
 
 	public void initialize(Long randomSeed, String problemString, Session session){
 		try {
-			this.problem = problemLoaderProvider.get().loadString(problemString);
+			this.problem = problemLoader.loadString(problemString);
 		}
 		catch(IOException e){
 			e.printStackTrace();
@@ -60,30 +63,67 @@ public class ModelGeneratorExecutor extends Thread {
 	}
 
 	private void sendResult(String message){
-		//TODO send to the session, the generation result
+		JsonObject objectToSend = new JsonObject();
+		objectToSend.addProperty("type", "result");
+		objectToSend.addProperty("message", message);
+		var jsonStringToSend = objectToSend.toString();
+		System.out.println(jsonStringToSend);
+		session.sendText(jsonStringToSend, Callback.NOOP);
 	}
 
 	private void sendError(String message){
-		//TODO send to the session
+		JsonObject objectToSend = new JsonObject();
+		objectToSend.addProperty("type", "error");
+		objectToSend.addProperty("message", message);
+		session.sendText(objectToSend.getAsString(), Callback.NOOP);
 	}
 
-	private void sendNodesMetadata(List<tools.refinery.language.web.semantics.metadata.NodeMetadata> metadata) {
-		//TODO send to the session
+	private void sendNodesMetadata(List<NodeMetadata> metadata) {
+		JsonObject objectToSend = new JsonObject();
+		objectToSend.addProperty("type", "nodesMetadata");
+
+		Gson gson = new Gson();
+		var metaDataJson = gson.toJson(metadata);
+		JsonArray metaDataArray = JsonParser.parseString(metaDataJson).getAsJsonArray();
+		objectToSend.add("object", metaDataArray);
+
+		var objectToSendString = objectToSend.toString();
+		session.sendText(objectToSendString, Callback.NOOP);
 	}
 
 	private void sendRelationsMetadata(List<RelationMetadata> relationsMetadata){
-		//TODO send to the session
+		System.out.println(relationsMetadata);
+		//TODO debug this part
+		JsonObject objectToSend = new JsonObject();
+		objectToSend.addProperty("type", "relationsMetadata");
+
+		Gson gson = new Gson();
+		var metaDataJson = gson.toJson(relationsMetadata);
+		JsonArray metaDataArray = JsonParser.parseString(metaDataJson).getAsJsonArray();
+		objectToSend.add("object", metaDataArray);
+
+		var objectToSendString = objectToSend.toString();
+		System.out.println(objectToSendString);
+		session.sendText(objectToSendString, Callback.NOOP);
 	}
 
 	private void sendPartialInterpretation(JsonObject partialInterpretation){
 		//TODO send to the session
+		JsonObject objectToSend = new JsonObject();
+		objectToSend.addProperty("type", "partialInterpretation");
+		Gson gson = new Gson();
+		var metaDataJson = gson.toJson(partialInterpretation);
+		objectToSend.addProperty("object", metaDataJson);
+
+		var partialInterpretationString = objectToSend.toString();
+		session.sendText(partialInterpretationString, Callback.NOOP);
 	}
 
 	@Override
 	public void run() {
 		if (!cancelled) {
 			try {
-				modelGenerator = factoryProvider.get().createGenerator(problem);
+				modelGenerator = factory.createGenerator(problem);
 			}
 			catch (Exception e){
 				sendError("Validation failed: " + e.getMessage());
@@ -115,7 +155,12 @@ public class ModelGeneratorExecutor extends Thread {
 		}
 
 		if (!cancelled){
-			var partialInterpretation = partialInterpretation2Json.getPartialInterpretation(modelGenerator, null);
+			var partialInterpretation = partialInterpretation2Json.getPartialInterpretation(modelGenerator, () -> {
+				if (cancelled || Thread.interrupted()) {
+					OperationCanceledManager operationCanceledManager = new OperationCanceledManager();
+					operationCanceledManager.throwOperationCanceledException();
+				}
+			});
 			sendPartialInterpretation(partialInterpretation);
 		}
 	}

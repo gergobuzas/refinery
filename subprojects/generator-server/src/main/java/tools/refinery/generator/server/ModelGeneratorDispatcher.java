@@ -1,8 +1,15 @@
 package tools.refinery.generator.server;
 
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import org.eclipse.jetty.websocket.api.Session;
 import tools.refinery.generator.ModelGenerator;
+import tools.refinery.language.ProblemRuntimeModule;
+import tools.refinery.language.ProblemStandaloneSetup;
 import tools.refinery.language.model.problem.Problem;
+import tools.refinery.language.web.ProblemWebModule;
+import tools.refinery.language.web.ProblemWebSetup;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -28,7 +35,8 @@ public class ModelGeneratorDispatcher {
 	}
 
 	public void addGenerationRequest(UUID uuid, Long randomSeed, String problemString, Session webSocketSession){
-		ModelGeneratorExecutor threadOfExecution = new ModelGeneratorExecutor();
+		Injector injector = new ProblemStandaloneSetup().createInjectorAndDoEMFRegistration();
+		ModelGeneratorExecutor threadOfExecution = injector.getInstance(ModelGeneratorExecutor.class);
 		threadOfExecution.initialize(randomSeed, problemString, webSocketSession);
 		threadOfExecution.start();
 		threadPool.put(uuid, threadOfExecution);

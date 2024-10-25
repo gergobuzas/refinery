@@ -1,6 +1,9 @@
 package tools.refinery.language.web.generator;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
@@ -21,6 +24,7 @@ import tools.refinery.language.web.xtext.server.push.PushWebDocument;
 import tools.refinery.store.util.CancellationToken;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
@@ -29,9 +33,9 @@ import java.util.concurrent.*;
 public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable {
 	//TODO WebSocket client
 	@WebSocket
-	private class GeneratorWebSocketEndpoint {
+	public class GeneratorWebSocketEndpoint {
 		private static final Logger LOG = LoggerFactory.getLogger(GeneratorWebSocketEndpoint.class);
-		private LinkedBlockingQueue<ModelGenerationResult> responseQueue;
+		private LinkedBlockingQueue<ModelGenerationResult> responseQueue = new LinkedBlockingQueue<>();
 		private LinkedBlockingQueue<List<NodeMetadata>> nodesMetaDataQueue = new LinkedBlockingQueue<>();
 		private LinkedBlockingQueue<List<RelationMetadata>> relationsMetadataQueue = new LinkedBlockingQueue<>();
 		private LinkedBlockingQueue<JsonObject> partialInterpretaitonQueue = new LinkedBlockingQueue<>();
@@ -43,18 +47,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 
 		public GeneratorWebSocketEndpoint() throws Exception {
 			client = new WebSocketClient();
-
-			try {
-				client.start();
-			}
-			catch (Exception e) {
-				LOG.error(e.getMessage(), e);
-			}
-			finally {
-				client.stop();
-			}
 		}
-
 
 		public void setTimeoutSec(long timeoutSec) {
 			this.timeoutSec = timeoutSec;
@@ -86,16 +79,18 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			return relationsMetadataQueue.poll(timeoutSec, TimeUnit.SECONDS);
 		}
 
-		public void connect() throws IOException, ExecutionException, InterruptedException, TimeoutException {
+		public void connect() throws Exception {
 			ClientUpgradeRequest customRequest = new ClientUpgradeRequest();
 			customRequest.setHeader("UUID", uuidOfWorker.toString());
+			client.start();
 			Future<Session> fut = client.connect(this, uri, customRequest);
 			session = fut.get(timeoutSec, TimeUnit.SECONDS);
 		}
 
-		public void sendGenerationRequest(String problemText, int randomSeed) throws InterruptedException, IOException, ExecutionException, TimeoutException {
-			if (!session.isOpen())
+		public void sendGenerationRequest(String problemText, int randomSeed) throws Exception {
+			if (session == null || !session.isOpen()) {
 				connect();
+			}
 
 			var type = "generationRequest";
 			var uuid = this.uuidOfWorker.toString();
@@ -105,15 +100,13 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			JsonObject generationData = new JsonObject();
 			generationData.addProperty("randomSeed", randomSeed);
 			generationData.addProperty("problem", problemText);
-			// TODO might cause problem the toString of the generationData
 			jsonToSend.addProperty("generationDetails", generationData.toString());
 
-			System.out.println("Sending out json..." + jsonToSend.toString());
 			session.sendText(jsonToSend.toString(), Callback.NOOP);
 		}
 
-		public void sendCancelRequest() throws IOException, ExecutionException, InterruptedException, TimeoutException {
-			if (!session.isOpen())
+		public void sendCancelRequest() throws Exception {
+			if (session == null || !session.isOpen())
 				connect();
 
 			var type = "cancelRequest";
@@ -146,14 +139,45 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		@OnWebSocketMessage
 		public void onText(String message) throws InterruptedException {
 			LOG.info("Text Message [{}]",message);
-			System.out.println("Received message: " + message);
-			//TODO parse the result of the server
-			if (message == "Error"){
-				//TODO extract the exact error instead of the whole message
-				ModelGenerationErrorResult result = new ModelGenerationErrorResult(uuid, message);
-				addResultToQueue(result);
+			System.out.println("Client onText:\n" + message);
+
+			//Parsing the received message
+			JsonObject jsonMessage = JsonParser.parseString(message).getAsJsonObject();
+			var type = jsonMessage.get("type").getAsString();
+
+			if (type.equals("result")){
+				var resultMessage = jsonMessage.get("message").getAsString();
+				var modelGenerationResult = new ModelGenerationStatusResult(uuidOfWorker, resultMessage);
+				responseQueue.offer(modelGenerationResult);
 			}
-			//TODO rest of the messages
+
+			if (type.equals("error")){
+				var resultMessage = jsonMessage.get("message").getAsString();
+				var modelGenerationResult = new ModelGenerationErrorResult(uuidOfWorker, resultMessage);
+				responseQueue.offer(modelGenerationResult);
+			}
+
+			if (type.equals("nodesMetadata")){
+				var nodesMetaDataArray = jsonMessage.get("object").getAsJsonArray();
+				Type listType = new TypeToken<List<NodeMetadata>>(){}.getType();
+				List<NodeMetadata> nodesMetaDataObject = new Gson().fromJson(nodesMetaDataArray, listType);
+				nodesMetaDataQueue.offer(nodesMetaDataObject);
+			}
+
+			if (type.equals("relationsMetadata")){
+				var relationsMetadataArray = jsonMessage.get("object").getAsJsonArray();
+				Type listType = new TypeToken<List<RelationMetadata>>(){}.getType();
+				List<RelationMetadata> relationsMetadataObject = new Gson().fromJson(relationsMetadataArray, listType);
+				relationsMetadataQueue.offer(relationsMetadataObject);
+			}
+
+			if (type.equals("partialInterpretation")){
+				var partialInterpretaitonString = jsonMessage.get("object").getAsString();
+				var partialInterpretaiton = JsonParser.parseString(partialInterpretaitonString).getAsJsonObject();
+				var partialInterpretaitonObject = new Gson().fromJson(partialInterpretaiton, JsonObject.class);
+				System.out.println(partialInterpretaitonObject);
+				partialInterpretaitonQueue.offer(partialInterpretaitonObject);
+			}
 		}
 
 		public void close() throws Exception {
@@ -276,10 +300,10 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		cancellationToken.checkCancelled();
 		try {
 			client.sendGenerationRequest(text, randomSeed);
-			int NUMBER_OF_SERVER_RESPONSES = 4;
+			int NUMBER_OF_SERVER_RESPONSES = 3;
 			// Validation ok,
 			// Generating model,
-			// satisfiable ok,
+			// satisfiable ok, --- wasn't sent so far, maybe need to debug
 			// saving generated model
 			for (int i = 0; i < NUMBER_OF_SERVER_RESPONSES; ++i) {
 				cancellationToken.checkCancelled();
@@ -287,14 +311,18 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 				if (!passed)
 					return errorResult;
 			}
+			System.out.println("End of the SERVER_RESPONSEs");
 			//Getting nodes metadata
 			var nodesMetaData = checkForNodesMetadata();
+			System.out.println(nodesMetaData);
 			cancellationToken.checkCancelled();
 			//Getting relations metadata
 			var relationsMetaData = checkForRelationsMetadata();
+			System.out.println(relationsMetaData);
 			cancellationToken.checkCancelled();
 			//Getting partial Interpretation
 			var partialInterpretation = checkForPartialInterpretation();
+			System.out.println(partialInterpretation);
 
 			return new ModelGenerationSuccessResult(uuid, nodesMetaData, relationsMetaData, partialInterpretation);
 		}
@@ -303,16 +331,6 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			e.printStackTrace();
 			return new ModelGenerationErrorResult(uuid, "Error: " + e.getMessage());
 		}
-		//TODO these should be put into network communication too!
-		/*
-		metadataCreator.setProblemTrace(generator.getProblemTrace());
-		var nodesMetadata = metadataCreator.getNodesMetadata(generator.getModel(), Concreteness.CANDIDATE);
-		cancellationToken.checkCancelled();
-		var relationsMetadata = metadataCreator.getRelationsMetadata();
-		cancellationToken.checkCancelled();
-		var partialInterpretation = partialInterpretation2Json.getPartialInterpretation(generator, cancellationToken);
-		return new ModelGenerationSuccessResult(uuid, nodesMetadata, relationsMetadata, partialInterpretation);
-		 */
 	}
 
 
@@ -337,6 +355,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			}
 			return;
 		}
+		System.out.println(result);
 		notifyResult(result);
 	}
 
@@ -351,7 +370,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			LOG.trace("Cancelling model generation: {}", uuid);
 			try {
 				client.sendCancelRequest();
-			} catch (IOException | ExecutionException | InterruptedException | TimeoutException e) {
+			} catch (Exception e) {
 				LOG.debug(e.getMessage(), e);
 				System.out.println("Could not cancel model generation of uuid: " + uuid);
 			}
