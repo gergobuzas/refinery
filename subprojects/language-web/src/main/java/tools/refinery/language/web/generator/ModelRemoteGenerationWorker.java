@@ -19,6 +19,7 @@ import tools.refinery.language.web.semantics.PartialInterpretation2Json;
 import tools.refinery.language.web.semantics.metadata.MetadataCreator;
 import tools.refinery.language.web.semantics.metadata.NodeMetadata;
 import tools.refinery.language.web.semantics.metadata.RelationMetadata;
+import tools.refinery.language.web.semantics.metadata.RelationMetadataGson;
 import tools.refinery.language.web.xtext.server.ThreadPoolExecutorServiceProvider;
 import tools.refinery.language.web.xtext.server.push.PushWebDocument;
 import tools.refinery.store.util.CancellationToken;
@@ -167,7 +168,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			if (type.equals("relationsMetadata")){
 				var relationsMetadataArray = jsonMessage.get("object").getAsJsonArray();
 				Type listType = new TypeToken<List<RelationMetadata>>(){}.getType();
-				List<RelationMetadata> relationsMetadataObject = new Gson().fromJson(relationsMetadataArray, listType);
+				List<RelationMetadata> relationsMetadataObject =  RelationMetadataGson.createGson().fromJson(relationsMetadataArray, listType);
 				relationsMetadataQueue.offer(relationsMetadataObject);
 			}
 

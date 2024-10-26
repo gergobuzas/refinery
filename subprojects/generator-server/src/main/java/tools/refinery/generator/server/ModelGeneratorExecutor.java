@@ -17,6 +17,7 @@ import tools.refinery.language.web.semantics.PartialInterpretation2Json;
 import tools.refinery.language.web.semantics.metadata.MetadataCreator;
 import tools.refinery.language.web.semantics.metadata.NodeMetadata;
 import tools.refinery.language.web.semantics.metadata.RelationMetadata;
+import tools.refinery.language.web.semantics.metadata.RelationMetadataGson;
 import tools.refinery.store.reasoning.literal.Concreteness;
 
 import java.io.IOException;
@@ -97,7 +98,7 @@ public class ModelGeneratorExecutor extends Thread {
 		JsonObject objectToSend = new JsonObject();
 		objectToSend.addProperty("type", "relationsMetadata");
 
-		Gson gson = new Gson();
+		Gson gson = RelationMetadataGson.createGson();
 		var metaDataJson = gson.toJson(relationsMetadata);
 		JsonArray metaDataArray = JsonParser.parseString(metaDataJson).getAsJsonArray();
 		objectToSend.add("object", metaDataArray);
@@ -108,7 +109,6 @@ public class ModelGeneratorExecutor extends Thread {
 	}
 
 	private void sendPartialInterpretation(JsonObject partialInterpretation){
-		//TODO send to the session
 		JsonObject objectToSend = new JsonObject();
 		objectToSend.addProperty("type", "partialInterpretation");
 		Gson gson = new Gson();
