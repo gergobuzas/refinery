@@ -32,7 +32,6 @@ import java.util.UUID;
 import java.util.concurrent.*;
 
 public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable {
-	//TODO WebSocket client
 	@WebSocket
 	public class GeneratorWebSocketEndpoint {
 		private static final Logger LOG = LoggerFactory.getLogger(GeneratorWebSocketEndpoint.class);
@@ -40,13 +39,32 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		private LinkedBlockingQueue<List<NodeMetadata>> nodesMetaDataQueue = new LinkedBlockingQueue<>();
 		private LinkedBlockingQueue<List<RelationMetadata>> relationsMetadataQueue = new LinkedBlockingQueue<>();
 		private LinkedBlockingQueue<JsonObject> partialInterpretaitonQueue = new LinkedBlockingQueue<>();
-		private final URI uri = URI.create("ws://localhost:8080");
+		private URI uri;
 		private UUID uuidOfWorker;
 		private final WebSocketClient client;
 		private Session session;
 		private long timeoutSec;
 
+		private void getGeneratorUri(){
+			String portStr = System.getenv("REFINERY_GENERATOR_WS_PORT");
+			boolean portIsSet = portStr != null && !portStr.isEmpty();
+			int port;
+			if (portIsSet){
+				port = Integer.parseInt(portStr);
+			} else {
+				port = 1314; //The default port
+			}
+
+			String domain = System.getenv("REFINERY_GENERATOR_WS_DOMAIN");
+			if (domain == null || domain.isEmpty()){
+				domain = "localhost";
+			}
+
+			uri = URI.create("ws://" + domain + ":" + port);
+		}
+
 		public GeneratorWebSocketEndpoint() throws Exception {
+			getGeneratorUri();
 			client = new WebSocketClient();
 		}
 
@@ -304,7 +322,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			int NUMBER_OF_SERVER_RESPONSES = 3;
 			// Validation ok,
 			// Generating model,
-			// satisfiable ok, --- wasn't sent so far, maybe need to debug
+			// satisfiable ok, --- wasn't sent so far, can be added tho in the future
 			// saving generated model
 			for (int i = 0; i < NUMBER_OF_SERVER_RESPONSES; ++i) {
 				cancellationToken.checkCancelled();
@@ -325,6 +343,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			var partialInterpretation = checkForPartialInterpretation();
 			System.out.println(partialInterpretation);
 
+			client.close();
 			return new ModelGenerationSuccessResult(uuid, nodesMetaData, relationsMetaData, partialInterpretation);
 		}
 		catch (Exception e) {

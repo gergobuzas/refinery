@@ -94,7 +94,6 @@ public class ModelGeneratorExecutor extends Thread {
 
 	private void sendRelationsMetadata(List<RelationMetadata> relationsMetadata){
 		System.out.println(relationsMetadata);
-		//TODO debug this part
 		JsonObject objectToSend = new JsonObject();
 		objectToSend.addProperty("type", "relationsMetadata");
 

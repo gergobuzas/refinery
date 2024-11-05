@@ -12,9 +12,23 @@ import org.eclipse.jetty.server.Server;
 
 
 public class ServerLauncher {
+
+	public static final int DEFAULT_LISTEN_PORT = 1314;
+
+	private static Server server;
+
+	private static int getPort(){
+		String portStr = System.getenv("REFINERY_GENERATOR_WS_PORT");
+		if(portStr != null){
+			return Integer.parseInt(portStr);
+		}
+		return DEFAULT_LISTEN_PORT;
+	}
+
     public static void main(String[] args) throws Exception {
-		// Create a Server with a ServerConnector listening on port 8080.
-		Server server = new Server(8080);
+		// Create a Server with a ServerConnector listening on configured port.
+		int port = getPort();
+		server = new Server(port);
 
 		// Create a ServletContextHandler with the given context path.
 		ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -30,7 +44,6 @@ public class ServerLauncher {
 		handler.addServlet(GeneratorServerInitServlet.class, "/");
 
 		// Starting the Server will start the ServletContextHandler.
-		System.out.println("Starting server...");
 		server.start();
     }
 }
