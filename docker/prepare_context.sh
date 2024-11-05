@@ -9,16 +9,20 @@ set -euo pipefail
 refinery_version="$(./get_version.sh)"
 cli_distribution_name="refinery-generator-cli-${refinery_version}"
 web_distribution_name="refinery-language-web-${refinery_version}"
+generator_distribution_name="refinery-generator-server-${refinery_version}"
 
-rm -rf "${cli_distribution_name}" "${web_distribution_name}" {cli,web}_dist context/extracted
+rm -rf "${cli_distribution_name}" "${web_distribution_name}" \
+ "${generator_distribution_name}" {cli,web,generator}_dist context/extracted
 
 tar -xvf "../subprojects/generator-cli/build/distributions/${cli_distribution_name}.tar"
 mv "${cli_distribution_name}" cli_dist
 tar -xvf "../subprojects/language-web/build/distributions/${web_distribution_name}.tar"
 mv "${web_distribution_name}" web_dist
-mkdir -p context/extracted/{cli,web}_{,app_}lib \
+tar -xvf "../subprojects/generator-server/build/distributions/${generator_distribution_name}.tar"
+mv "${generator_distribution_name}" generator_dist
+mkdir -p context/extracted/{cli,web,generator}_{,app_}lib \
     context/extracted/common_{,amd64_,arm64_}lib \
-    context/extracted/{cli,web}_{amd64,arm64}_bin
+    context/extracted/{cli,web,generator}_{amd64,arm64}_bin
 
 move_application_jars() {
     prefix="$1"
@@ -29,14 +33,64 @@ move_application_jars() {
 
 move_application_jars cli
 move_application_jars web
+move_application_jars generator
 
-for i in cli_dist/lib/*; do
-    j="web${i#cli}"
-    if [[ -f "$j" ]]; then
-        mv "$i" "context/extracted/common_lib${i#cli_dist/lib}"
-        rm "$j"
-    fi
+# THE NEXT THREE PARTS are for  Dependency deduplication for optimizing Docker \
+  # image creation
+
+# Helper function to check if file exists in another distribution
+check_file_exists() {
+    local source_file="$1"
+    local other_dist="$2"
+    local filename="${source_file##*/}"
+    [[ -f "${other_dist}/lib/${filename}" ]]
+}
+
+# Function to move a file to common lib and remove duplicates
+move_to_common() {
+    local source_file="$1"
+    local filename="${source_file##*/}"
+    mv "$source_file" "context/extracted/common_lib/${filename}"
+    # Remove duplicates from other distributions if they exist
+    [[ -f "web_dist/lib/${filename}" ]] && rm "web_dist/lib/${filename}"
+    [[ -f "generator_dist/lib/${filename}" ]] && rm "generator_dist/lib/${filename}"
+    [[ -f "cli_dist/lib/${filename}" ]] && rm "cli_dist/lib/${filename}"
+}
+
+# Process all files in each distribution
+for dist in cli web generator; do
+    for file in "${dist}_dist/lib/"*; do
+        # Skip if file was already moved to common
+        [[ ! -f "$file" ]] && continue
+
+        case $dist in
+            "cli")
+                # Check if file exists in web or generator
+                if check_file_exists "$file" "web_dist" || check_file_exists "$file" "generator_dist"; then
+                    move_to_common "$file"
+                fi
+                ;;
+            "web")
+                # Check if file exists in generator (cli already processed)
+                if check_file_exists "$file" "generator_dist"; then
+                    move_to_common "$file"
+                fi
+                ;;
+            "generator")
+                # All files already processed, no need to check
+                ;;
+        esac
+    done
 done
+
+# Dependency deduplication for optimizing Docker image creation
+#for i in cli_dist/lib/*; do
+#    j="web${i#cli}"
+#    if [[ -f "$j" ]]; then
+#        mv "$i" "context/extracted/common_lib${i#cli_dist/lib}"
+#        rm "$j"
+#    fi
+#done
 
 # Move architecture-specific jars to their repsective directories.
 mv context/extracted/common_lib/ortools-linux-x86-64-*.jar context/extracted/common_amd64_lib
@@ -62,5 +116,6 @@ prepare_application() {
 
 prepare_application cli generator-cli
 prepare_application web language-web
+prepare_application generator generator-server
 
-rm -rf {cli,web}_dist
+rm -rf {cli,web,generator}_dist

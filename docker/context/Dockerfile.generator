@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2023-2024 The Refinery Authors <https://refinery.tools/>
+#
+# SPDX-License-Identifier: EPL-2.0
+
+FROM base AS generator-base
+# Layer with platform-dependent dependencies, slow changing.
+ADD --link extracted/generator_lib /app/lib
+
+FROM generator-base AS generator-amd64
+# Layer with platform-dependent startup script containing references to all
+# dependency versions.
+ADD --link extracted/generator_amd64_bin /app/bin
+
+FROM generator-base AS generator-arm64
+# Layer with platform-dependent startup script containing references to all
+# dependency versions.
+ADD --link extracted/generator_arm64_bin /app/bin
+
+FROM generator-$TARGETARCH
+# Layer with platform-independent application jars.
+ADD --link extracted/generator_app_lib /app/lib
+# Common settings added on top.
+ENV  REFINERY_GENERATOR_WS_PORT=1314
+EXPOSE 1314
+USER 1000
+WORKDIR /app
+ENTRYPOINT ["/app/bin/refinery-generator-server"]
