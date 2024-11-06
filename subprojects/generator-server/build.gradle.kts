@@ -46,6 +46,6 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass.set("generator.server.ServerLauncher")
+    mainClass.set("tools.refinery.generator.server.ServerLauncher")
 }
 

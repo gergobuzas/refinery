@@ -20,8 +20,8 @@ FROM web-$TARGETARCH
 # Layer with platform-independent application jars.
 ADD --link extracted/web_app_lib /app/lib
 # Common settings added on top.
-ENV REFINERY_LISTEN_HOST=0.0.0.0 REFINERY_LISTEN_PORT=8888
-EXPOSE 8888
+ENV REFINERY_LISTEN_HOST=0.0.0.0 REFINERY_LISTEN_PORT=1312
+EXPOSE 1312
 USER 1000
 WORKDIR /app
 ENTRYPOINT ["/app/bin/refinery-language-web"]

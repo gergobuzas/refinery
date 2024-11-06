@@ -20,7 +20,7 @@ FROM generator-$TARGETARCH
 # Layer with platform-independent application jars.
 ADD --link extracted/generator_app_lib /app/lib
 # Common settings added on top.
-ENV  REFINERY_GENERATOR_WS_PORT=1314
+ENV REFINERY_GENERATOR_WS_PORT=1314
 EXPOSE 1314
 USER 1000
 WORKDIR /app

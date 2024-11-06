@@ -1,0 +1,20 @@
+services:
+  web:
+    image: ghcr.io/graphs4value/refinery
+    ports:
+      - "1312:1312"
+    networks:
+      - proxy-communication
+
+  generator:
+    image: ghcr.io/graphs4value/refinery-generator
+    ports:
+      - "1314:1314"
+    networks:
+      - proxy-communication
+
+
+networks:
+  proxy-communication :
+    name: proxy_network
+    driver: bridge
