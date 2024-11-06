@@ -55,12 +55,12 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 				port = 1314; //The default port
 			}
 
-			String domain = System.getenv("REFINERY_GENERATOR_WS_DOMAIN");
-			if (domain == null || domain.isEmpty()){
-				domain = "localhost";
+			String host = System.getenv("REFINERY_GENERATOR_WS_HOST");
+			if (host == null || host.isEmpty()){
+				host = "localhost";
 			}
 
-			uri = URI.create("ws://" + domain + ":" + port);
+			uri = URI.create("ws://" + host + ":" + port);
 		}
 
 		public GeneratorWebSocketEndpoint() throws Exception {
