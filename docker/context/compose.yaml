@@ -4,8 +4,9 @@ services:
     ports:
       - "1312:1312"
     environment:
-      REFINERY_GENERATOR_WS_HOST: "0.0.0.0"
+      REFINERY_GENERATOR_WS_HOST: "localhost"
       REFINERY_GENERATOR_WS_PORT: "1314"
+    network_mode: host
     networks:
       - proxy-communication
 
@@ -15,6 +16,7 @@ services:
       - "1314:1314"
     environment:
       REFINERY_GENERATOR_WS_PORT: "1314"
+    network_mode: host
     networks:
       - proxy-communication
 
