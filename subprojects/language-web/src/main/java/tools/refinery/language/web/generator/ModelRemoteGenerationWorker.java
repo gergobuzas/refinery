@@ -57,10 +57,12 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 
 			String host = System.getenv("REFINERY_GENERATOR_WS_HOST");
 			if (host == null || host.isEmpty()){
+				System.out.println("NO HOSTNAME SET (REFINERY_GENERATOR_WS_HOST)... localhost set");
 				host = "localhost";
 			}
 
 			uri = URI.create("ws://" + host + ":" + port);
+			System.out.println("URI:" + uri);
 		}
 
 		public GeneratorWebSocketEndpoint() throws Exception {
@@ -101,8 +103,12 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		public void connect() throws Exception {
 			ClientUpgradeRequest customRequest = new ClientUpgradeRequest();
 			customRequest.setHeader("UUID", uuidOfWorker.toString());
+			System.out.println("Before client start");
 			client.start();
+			System.out.println("SEND:" + this.uri);
+			System.out.println("Before connect");
 			Future<Session> fut = client.connect(this, uri, customRequest);
+			System.out.println("After connect");
 			session = fut.get(timeoutSec, TimeUnit.SECONDS);
 		}
 

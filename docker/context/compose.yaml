@@ -4,11 +4,12 @@ services:
     ports:
       - "1312:1312"
     environment:
-      REFINERY_LISTEN_HOST: "localhost"
+      REFINERY_LISTEN_HOST: "0.0.0.0"
       REFINERY_LISTEN_PORT: "1312"
-      REFINERY_GENERATOR_WS_HOST: "localhost"
+      REFINERY_GENERATOR_WS_HOST: "generator"
       REFINERY_GENERATOR_WS_PORT: "1314"
-    network_mode: host
+    networks:
+      - proxy-communication
 
   generator:
     image: ghcr.io/graphs4value/refinery-generator
@@ -16,4 +17,12 @@ services:
       - "1314:1314"
     environment:
       REFINERY_GENERATOR_WS_PORT: "1314"
-    network_mode: host
+    networks:
+      - proxy-communication
+
+
+networks:
+  proxy-communication :
+    name: proxy_network
+    driver: bridge
+
