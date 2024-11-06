@@ -4,6 +4,8 @@ services:
     ports:
       - "1312:1312"
     environment:
+      REFINERY_LISTEN_HOST: "localhost"
+      REFINERY_LISTEN_PORT: "1312"
       REFINERY_GENERATOR_WS_HOST: "localhost"
       REFINERY_GENERATOR_WS_PORT: "1314"
     network_mode: host
