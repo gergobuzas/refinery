@@ -3,6 +3,9 @@ services:
     image: ghcr.io/graphs4value/refinery
     ports:
       - "1312:1312"
+    environment:
+      REFINERY_GENERATOR_WS_HOST: "0.0.0.0"
+      REFINERY_GENERATOR_WS_PORT: "1314"
     networks:
       - proxy-communication
 
@@ -10,6 +13,8 @@ services:
     image: ghcr.io/graphs4value/refinery-generator
     ports:
       - "1314:1314"
+    environment:
+      REFINERY_GENERATOR_WS_PORT: "1314"
     networks:
       - proxy-communication
 
