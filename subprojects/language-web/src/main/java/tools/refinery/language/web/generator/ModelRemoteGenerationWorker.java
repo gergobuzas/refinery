@@ -206,6 +206,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		}
 
 		public void close() throws Exception {
+			session.close();
 			client.stop();
 		}
 
@@ -348,6 +349,8 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			//Getting partial Interpretation
 			var partialInterpretation = checkForPartialInterpretation();
 			System.out.println(partialInterpretation);
+
+
 
 			client.close();
 			return new ModelGenerationSuccessResult(uuid, nodesMetaData, relationsMetaData, partialInterpretation);
