@@ -35,92 +35,20 @@ move_application_jars cli
 move_application_jars web
 move_application_jars generator
 
-# THE NEXT THREE PARTS are for  Dependency deduplication for optimizing Docker \
-  # image creation
-
 # Dependency deduplication for optimizing Docker image creation
-# TODO refactor to function
-
-# Helper function to check if file exists in another distribution
-#check_file_exists() {
-#    local source_file="$1"
-#    local other_dist="$2"
-#    local filename="${source_file##*/}"
-#    [[ -f "${other_dist}/lib/${filename}" ]]
-#}
-#
-## Function to move a file to common lib and remove duplicates
-#move_to_common() {
-#    local source_file="$1"
-#    local filename="${source_file##*/}"
-#    mv "$source_file" "context/extracted/common_lib/${filename}"
-#    # Remove duplicates from other distributions if they exist
-#    if [[ -f "web_dist/lib/${filename}" ]]; then
-#      rm "web_dist/lib/${filename}"
-#    fi
-#    if [[ -f "generator_dist/lib/${filename}" ]]; then
-#      rm "generator_dist/lib/${filename}"
-#    fi
-#    if [[ -f "cli_dist/lib/${filename}" ]]; then
-#      rm "cli_dist/lib/${filename}"
-#    fi
-#}
-#
-## Process all files in each distribution
-#for dist in cli web generator; do
-#    echo "dist:"$dist
-#    for file in ${dist}_dist/lib/*;
-#    do
-#        echo "file:"$file
-#        if [[ -f "$file" ]]; then
-#          case $dist in
-#              "cli")
-#                  # Check if file exists in web or generator
-#                  if check_file_exists "$file" "web_dist" || check_file_exists "$file" "generator_dist"; then
-#                      move_to_common "$file"
-#                  fi
-#                  ;;
-#              "web")
-#                  # Check if file exists in generator (cli already processed)
-#                  if check_file_exists "$file" "generator_dist"; then
-#                      move_to_common "$file"
-#                  fi
-#                  ;;
-#              "generator")
-#                  # All files already processed, no need to check
-#                  ;;
-#          esac
-#        fi
-#    done
-#done
-#
-#echo "LOL"
-
+# It used to be checking whether a jar file is in atleast two locations (cli/web/generator)
+  # However, that caused almost all files to be moved to the base image
+# It checks whether a file from cli is in all 3 of the target libs
+# TODO modify in the future. Maybe refactor the generator codebase, so that it isn't as tightly coupled
 for i in cli_dist/lib/*; do
     j="web${i#cli}"
-    if [[ -f "$j" ]]; then
+    generator_file="generator${i#cli}"
+    if [[ -f "$j" && -f "$generator_file" ]]; then
         mv "$i" "context/extracted/common_lib${i#cli_dist/lib}"
         rm "$j"
+	rm "$generator_file"
     fi
 done
-#
-#for i in cli_dist/lib/*; do
-#    j="generator${i#cli}"
-#    c="context/extracted/common_lib${i#cli_dist/lib}"
-#    if [[ -f "$j" ]]; then
-#        mv "$i" "context/extracted/common_lib${i#cli_dist/lib}"
-#        rm "$j"
-#    fi
-#done
-#
-#for i in generator_dist/lib/*; do
-#    j="web${i#generator}"
-#    echo j $j
-#    if [[ -f "$j" ]]; then
-#        mv "$i" "context/extracted/common_lib${i#generator_dist/lib}"
-#        rm "$j"
-#    fi
-#done
 
 # Move architecture-specific jars to their repsective directories.
 mv context/extracted/common_lib/ortools-linux-x86-64-*.jar context/extracted/common_amd64_lib
