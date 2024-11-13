@@ -35,7 +35,7 @@ target "web" {
   dockerfile = "Dockerfile.web"
   platforms = ["linux/amd64", "linux/arm64"]
   output = [
-    "type=image,push=${REFINERY_PUSH},\"name=gergobuzas/refinery:${REFINERY_VERSION},gergobuzas/refinery:latest\",annotation-index.org.opencontainers.image.source=https://github.com/gergobuzas/refinery,annotation-index.org.opencontainers.image.description=Refinery: an efficient graph solver for generating well-formed models,annotation-index.org.opencontainers.image.licenses=EPL-2.0"
+    "type=image,push=${REFINERY_PUSH},\"name=gergobuzas/refinery-language-web:${REFINERY_VERSION},gergobuzas/refinery-language-web:latest\",annotation-index.org.opencontainers.image.source=https://github.com/gergobuzas/refinery,annotation-index.org.opencontainers.image.description=Refinery: an efficient graph solver for generating well-formed models,annotation-index.org.opencontainers.image.licenses=EPL-2.0"
   ]
   contexts = {
     base = "target:base"
