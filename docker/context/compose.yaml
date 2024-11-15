@@ -1,6 +1,6 @@
 services:
   web:
-    image: ghcr.io/graphs4value/refinery
+    image: gergobuzas/refinery-language-web
     ports:
       - "1312:1312"
     environment:
@@ -12,7 +12,7 @@ services:
       - proxy-communication
 
   generator:
-    image: ghcr.io/graphs4value/refinery-generator
+    image: gergobuzas/refinery-generator
     ports:
       - "1314:1314"
     environment:
