@@ -39,7 +39,6 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		private LinkedBlockingQueue<List<NodeMetadata>> nodesMetaDataQueue = new LinkedBlockingQueue<>();
 		private LinkedBlockingQueue<List<RelationMetadata>> relationsMetadataQueue = new LinkedBlockingQueue<>();
 		private LinkedBlockingQueue<JsonObject> partialInterpretaitonQueue = new LinkedBlockingQueue<>();
-		private volatile int tasksRunning = 0;
 		private URI uri;
 		private UUID uuidOfWorker;
 		private final WebSocketClient client;
@@ -108,6 +107,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			client.start();
 			System.out.println("SEND:" + this.uri);
 			System.out.println("Before connect");
+			LOG.info("Connecting to '" + this.uri + "' with UUID:" + this.uuidOfWorker);
 			Future<Session> fut = client.connect(this, uri, customRequest);
 			System.out.println("After connect");
 			session = fut.get(timeoutSec, TimeUnit.SECONDS);
@@ -147,9 +147,9 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		@OnWebSocketClose
 		public void onClose(int statusCode, String reason)
 		{
-			LOG.info("WebSocket Close: {} - {}",statusCode,reason);
+			LOG.info("WebSocket Close for UUID:{}: Status:{} - Reason:{}",uuidOfWorker, statusCode,reason);
 			try {
-				this.close();
+				//this.close();
 			} catch (Exception e) {
 				LOG.error("Couldn't close connection");
 				throw new RuntimeException(e);
@@ -159,7 +159,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		@OnWebSocketOpen
 		public void onOpen(Session session)
 		{
-			LOG.info("WebSocket Open: {}", session);
+			LOG.info("WebSocket Open Session:{}", session);
 		}
 
 		@OnWebSocketError
@@ -214,17 +214,31 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 
 		public void close() throws Exception {
 			boolean canBeClosed = false;
-			while(!canBeClosed)
+			while (!canBeClosed)
 			{
+				System.out.println(relationsMetadataQueue.size());
+				System.out.println(responseQueue.size());
+				System.out.println(nodesMetaDataQueue.size());
+				System.out.println(partialInterpretaitonQueue.size());
 				canBeClosed = relationsMetadataQueue.isEmpty() &&
 								nodesMetaDataQueue.isEmpty() &&
 								partialInterpretaitonQueue.isEmpty() &&
 								responseQueue.isEmpty();
 			}
-			session.close();
-			client.stop();
+			session.close(1000, uuidOfWorker.toString(), Callback.from( () -> {
+				try {
+					client.stop();
+				} catch (Exception e) {
+					LOG.error("Couldn't stop client!");
+					throw new RuntimeException(e.getMessage());
+				}
+			}, this::closeFailed));
+
 		}
 
+		public void closeFailed(Throwable x) {
+			LOG.error("closeFailed - couldn't stop websocket client for some reason", x);
+		}
 	}
 	private static final Logger LOG = LoggerFactory.getLogger(ModelRemoteGenerationWorker.class);
 	private final UUID uuid = UUID.randomUUID();
@@ -251,6 +265,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 	private ScheduledFuture<?> timeoutFuture;
 	private GeneratorWebSocketEndpoint client;
 	private ModelGenerationErrorResult errorResult;
+	private boolean finished = false;
 
 	private final CancellationToken cancellationToken = () -> {
 		if (cancelled || Thread.interrupted()) {
@@ -262,15 +277,10 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		client = new GeneratorWebSocketEndpoint();
 		client.setTimeoutSec(timeoutSec);
 		client.setUuidOfWorker(uuid);
+		System.out.println(uuid);
 	}
 
 	public ModelRemoteGenerationWorker(){
-		try {
-			setupClient();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	@Inject
@@ -311,7 +321,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		this.randomSeed = randomSeed;
 		this.timeoutSec = timeoutSec;
 		this.text = state.getText();
-		client.setTimeoutSec(timeoutSec);
+		//client.setTimeoutSec(timeoutSec);
 	}
 
 	@Override
@@ -355,17 +365,13 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			System.out.println("End of the SERVER_RESPONSEs");
 			//Getting nodes metadata
 			var nodesMetaData = checkForNodesMetadata();
-			System.out.println(nodesMetaData);
 			cancellationToken.checkCancelled();
 			//Getting relations metadata
 			var relationsMetaData = checkForRelationsMetadata();
-			System.out.println(relationsMetaData);
 			cancellationToken.checkCancelled();
 			//Getting partial Interpretation
 			var partialInterpretation = checkForPartialInterpretation();
-			System.out.println(partialInterpretation);
-
-
+			LOG.info("Received all generation metadata!....");
 
 			client.close();
 			return new ModelGenerationSuccessResult(uuid, nodesMetaData, relationsMetaData, partialInterpretation);
@@ -381,6 +387,17 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 
 	@Override
 	public void run(){
+		if (finished) {
+			LOG.info("Finished value: {}", finished);
+			return;
+		}
+		try {
+			setupClient();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			LOG.error("Couldn't setup client!");
+		}
 		startTimeout();
 		notifyResult(new ModelGenerationStatusResult(uuid, "Initializing model generator"));
 		ModelGenerationResult result;
@@ -402,6 +419,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		}
 		System.out.println(result);
 		notifyResult(result);
+		finished = true;
 	}
 
 	@Override

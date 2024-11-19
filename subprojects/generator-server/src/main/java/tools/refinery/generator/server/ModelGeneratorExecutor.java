@@ -118,6 +118,10 @@ public class ModelGeneratorExecutor extends Thread {
 		session.sendText(partialInterpretationString, Callback.NOOP);
 	}
 
+	public void disconnect() {
+		this.session.close();
+	}
+
 	@Override
 	public void run() {
 		if (!cancelled) {
