@@ -16,11 +16,13 @@ import tools.refinery.language.web.semantics.SemanticsService;
 import tools.refinery.language.web.xtext.server.push.PushWebDocument;
 import tools.refinery.language.web.xtext.server.push.PushWebDocumentAccess;
 
+
 @Singleton
 public class ModelGenerationService {
 	public static final String SERVICE_NAME = "modelGeneration";
 	public static final String MODEL_GENERATION_EXECUTOR = "modelGeneration";
 	public static final String MODEL_GENERATION_TIMEOUT_EXECUTOR = "modelGenerationTimeout";
+	public static final boolean USE_GENERATOR_SERVER = true;
 
 	@Inject
 	private OperationCanceledManager operationCanceledManager;
@@ -28,13 +30,16 @@ public class ModelGenerationService {
 	@Inject
 	private Provider<ModelGenerationWorker> workerProvider;
 
+	@Inject
+	private Provider<ModelRemoteGenerationWorker> remoteWorkerProvider;
+
 	private final long timeoutSec;
 
 	public ModelGenerationService() {
 		timeoutSec = SemanticsService.getTimeout("REFINERY_MODEL_GENERATION_TIMEOUT_SEC").orElse(600L);
 	}
 
-	public ModelGenerationStartedResult generateModel(PushWebDocumentAccess document, int randomSeed) {
+	private ModelGenerationStartedResult generateModelLocal(PushWebDocumentAccess document, int randomSeed){
 		return document.modify(new CancelableUnitOfWork<>() {
 			@Override
 			public ModelGenerationStartedResult exec(IXtextWebDocument state, CancelIndicator cancelIndicator) {
@@ -51,6 +56,35 @@ public class ModelGenerationService {
 				return new ModelGenerationStartedResult(worker.getUuid());
 			}
 		});
+	}
+
+	private ModelGenerationStartedResult generateModelRemote(PushWebDocumentAccess document, int randomSeed){
+		//TODO create a remote worker as a client, for the generator server
+		// TODO send data of modelgeneration request to the server
+		return document.modify(new CancelableUnitOfWork<>() {
+			@Override
+			public ModelGenerationStartedResult exec(IXtextWebDocument state, CancelIndicator cancelIndicator) {
+				var pushState = (PushWebDocument) state;
+				var worker = remoteWorkerProvider.get();
+				worker.setState(pushState, randomSeed, timeoutSec);
+				var manager = pushState.getModelGenerationManager();
+				worker.start();
+				boolean canceled = manager.setActiveModelGenerationWorker(worker, cancelIndicator);
+				if (canceled) {
+					worker.cancel();
+					operationCanceledManager.throwOperationCanceledException();
+				}
+				return new ModelGenerationStartedResult(worker.getUuid());
+			}
+		});
+	}
+
+
+	public ModelGenerationStartedResult generateModel(PushWebDocumentAccess document, int randomSeed) {
+		if (USE_GENERATOR_SERVER) {
+			return generateModelRemote(document, randomSeed);
+		}
+		return generateModelLocal(document, randomSeed);
 	}
 
 	public ModelGenerationCancelledResult cancelModelGeneration(PushWebDocumentAccess document) {

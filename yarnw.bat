@@ -4,9 +4,9 @@
 
 @echo off
 setlocal
-set script_dir=%~dp0
-set node_bin=%script_dir%.node
-set Path=%node_bin%;%Path%
-%node_bin%\yarn.CMD %*
+set "script_dir=%~dp0"
+set "node_bin=%script_dir%.node"
+set "Path=%node_bin%;%Path%"
+"%node_bin%\yarn.CMD" %*
 set exit_code=%ERRORLEVEL%
 endlocal & if %exit_code% neq 0 exit /b %exit_code%

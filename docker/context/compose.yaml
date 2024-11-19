@@ -1,0 +1,28 @@
+services:
+  web:
+    image: gergobuzas/refinery-language-web
+    ports:
+      - "1312:1312"
+    environment:
+      REFINERY_LISTEN_HOST: "0.0.0.0"
+      REFINERY_LISTEN_PORT: "1312"
+      REFINERY_GENERATOR_WS_HOST: "generator"
+      REFINERY_GENERATOR_WS_PORT: "1314"
+    networks:
+      - proxy-communication
+
+  generator:
+    image: gergobuzas/refinery-generator
+    ports:
+      - "1314:1314"
+    environment:
+      REFINERY_GENERATOR_WS_PORT: "1314"
+    networks:
+      - proxy-communication
+
+
+networks:
+  proxy-communication :
+    name: proxy_network
+    driver: bridge
+
