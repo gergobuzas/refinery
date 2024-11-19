@@ -39,6 +39,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		private LinkedBlockingQueue<List<NodeMetadata>> nodesMetaDataQueue = new LinkedBlockingQueue<>();
 		private LinkedBlockingQueue<List<RelationMetadata>> relationsMetadataQueue = new LinkedBlockingQueue<>();
 		private LinkedBlockingQueue<JsonObject> partialInterpretaitonQueue = new LinkedBlockingQueue<>();
+		private volatile int tasksRunning = 0;
 		private URI uri;
 		private UUID uuidOfWorker;
 		private final WebSocketClient client;
@@ -147,13 +148,12 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		public void onClose(int statusCode, String reason)
 		{
 			LOG.info("WebSocket Close: {} - {}",statusCode,reason);
-			/*try {
+			try {
 				this.close();
 			} catch (Exception e) {
 				LOG.error("Couldn't close connection");
 				throw new RuntimeException(e);
 			}
-			 */
 		}
 
 		@OnWebSocketOpen
@@ -337,7 +337,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 	}
 
 	@Override
-	public ModelGenerationResult doRun() throws IOException {
+	public ModelGenerationResult doRun() throws Exception {
 		cancellationToken.checkCancelled();
 		try {
 			client.sendGenerationRequest(text, randomSeed);
@@ -373,6 +373,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 			e.printStackTrace();
+			client.close();
 			return new ModelGenerationErrorResult(uuid, "Error: " + e.getMessage());
 		}
 	}

@@ -14,7 +14,7 @@ public interface IGenerationWorker {
 
 	public void startTimeout();
 
-	public ModelGenerationResult doRun() throws IOException;
+	public ModelGenerationResult doRun() throws Exception;
 
 	public void cancel();
 
