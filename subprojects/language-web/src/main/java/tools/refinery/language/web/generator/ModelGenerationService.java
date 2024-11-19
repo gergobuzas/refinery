@@ -59,8 +59,6 @@ public class ModelGenerationService {
 	}
 
 	private ModelGenerationStartedResult generateModelRemote(PushWebDocumentAccess document, int randomSeed){
-		//TODO create a remote worker as a client, for the generator server
-		// TODO send data of modelgeneration request to the server
 		return document.modify(new CancelableUnitOfWork<>() {
 			@Override
 			public ModelGenerationStartedResult exec(IXtextWebDocument state, CancelIndicator cancelIndicator) {

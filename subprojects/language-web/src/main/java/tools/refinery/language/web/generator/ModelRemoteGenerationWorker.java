@@ -147,6 +147,13 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		public void onClose(int statusCode, String reason)
 		{
 			LOG.info("WebSocket Close: {} - {}",statusCode,reason);
+			/*try {
+				this.close();
+			} catch (Exception e) {
+				LOG.error("Couldn't close connection");
+				throw new RuntimeException(e);
+			}
+			 */
 		}
 
 		@OnWebSocketOpen
@@ -206,6 +213,14 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		}
 
 		public void close() throws Exception {
+			boolean canBeClosed = false;
+			while(!canBeClosed)
+			{
+				canBeClosed = relationsMetadataQueue.isEmpty() &&
+								nodesMetaDataQueue.isEmpty() &&
+								partialInterpretaitonQueue.isEmpty() &&
+								responseQueue.isEmpty();
+			}
 			session.close();
 			client.stop();
 		}
