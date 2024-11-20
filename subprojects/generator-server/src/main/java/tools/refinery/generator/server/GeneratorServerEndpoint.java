@@ -88,6 +88,7 @@ public class GeneratorServerEndpoint {
 	public void onWebSocketError(Throwable cause)
 	{
 		// The WebSocket endpoint failed.
+		LOG.error("Websocket Error - The cause:", cause);
 
 		// You may log the error.
 		cause.printStackTrace();
@@ -99,9 +100,8 @@ public class GeneratorServerEndpoint {
 	@OnWebSocketClose
 	public void onWebSocketClose(int statusCode, String reason)
 	{
-		// The WebSocket endpoint has been closed.
-
-		// You may dispose resources.
+		LOG.info("WebSocket close! Status:{} - Reason(UUID):{}", statusCode, reason);
+		ModelGeneratorDispatcher.getInstance().disconnect(UUID.fromString(reason));
 		//disposeResources();
 	}
 }

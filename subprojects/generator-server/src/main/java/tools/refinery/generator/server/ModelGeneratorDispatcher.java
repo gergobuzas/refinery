@@ -17,7 +17,6 @@ import java.util.UUID;
 
 /**
 * Singleton class for dispatching the requests on separate threads
- * TODO
  * Make this a singleton, so that no other instances can be made
  * ModelGenerator should be running on separate threads, once started
  * Status updates should be sent through via the session
@@ -45,6 +44,12 @@ public class ModelGeneratorDispatcher {
 	public void cancelGenerationRequest(UUID uuid) {
 		ModelGeneratorExecutor threadOfExecution = threadPool.get(uuid);
 		threadOfExecution.cancel();
+	}
+
+	public void disconnect(UUID uuid) {
+		ModelGeneratorExecutor threadOfExecution = threadPool.get(uuid);
+		threadPool.remove(uuid);
+		threadOfExecution.disconnect();
 	}
 
 	private ModelGeneratorDispatcher() {
