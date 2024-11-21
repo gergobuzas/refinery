@@ -149,7 +149,10 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		System.out.println("doRun()");
 		cancellationToken.checkCancelled();
 		try {
-			client.sendGenerationRequest(text, randomSeed);
+			boolean success = client.sendGenerationRequest(text, randomSeed);
+			if (!success && client != null)
+				throw new RuntimeException("Some problem occured...");
+
 			int NUMBER_OF_SERVER_RESPONSES = 3;
 			// Validation ok,
 			// Generating model,
