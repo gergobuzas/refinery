@@ -93,24 +93,37 @@ public class GeneratorWebSocketEndpoint {
 		return relationsMetadataQueue.poll(timeoutSec, TimeUnit.SECONDS);
 	}
 
-	public void connect() throws Exception {
+	public void connect(){
 		ClientUpgradeRequest customRequest = new ClientUpgradeRequest();
 		customRequest.setHeader("UUID", uuidOfWorker.toString());
 		System.out.println("Before client start");
-		client.start();
+		try{
+			client.start();
+		} catch (Exception e) {
+			LOG.error("Couldn't start the client for Generation!!");
+		}
 		System.out.println("SEND:" + this.uri);
 		System.out.println("Before connect");
 		LOG.info("Connecting to '" + this.uri + "' with UUID:" + this.uuidOfWorker);
-		Future<Session> fut = client.connect(this, uri, customRequest);
-		System.out.println("After connect");
-		session = fut.get(timeoutSec, TimeUnit.SECONDS);
+		try {
+			Future<Session> fut = client.connect(this, uri, customRequest);
+			System.out.println("After connect sent");
+			session = fut.get(timeoutSec, TimeUnit.SECONDS);
+		} catch (Exception e) {
+			LOG.error("Couldn't create session upon connection to URL!!!");
+			System.out.println("Couldn't create session upon connection to URL!!!");
+			throw new RuntimeException("Couldn't create session upon connection to URL!!!");
+		}
 	}
 
-	public void sendGenerationRequest(String problemText, int randomSeed) throws Exception {
+	public boolean sendGenerationRequest(String problemText, int randomSeed){
 		if (finished)
-			return;
+			return false;
 		if (session == null || !session.isOpen()) {
 			connect();
+		}
+		if (session == null) {
+			return false;
 		}
 
 		var type = "generationRequest";
@@ -124,9 +137,10 @@ public class GeneratorWebSocketEndpoint {
 		jsonToSend.addProperty("generationDetails", generationData.toString());
 
 		session.sendText(jsonToSend.toString(), Callback.NOOP);
+		return true;
 	}
 
-	public void sendCancelRequest() throws Exception {
+	public void sendCancelRequest(){
 		System.out.println("Trying to cancel UUID:" + uuidOfWorker);
 		if (finished)
 			return;
