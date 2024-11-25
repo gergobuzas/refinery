@@ -39,7 +39,7 @@ public class ModelGenerationService {
 		timeoutSec = SemanticsService.getTimeout("REFINERY_MODEL_GENERATION_TIMEOUT_SEC").orElse(600L);
 		String useGenServer = System.getenv("USE_GENERATOR_SERVER");
 		if (useGenServer != null)
-			USE_GENERATOR_SERVER = Boolean.getBoolean(useGenServer);
+			USE_GENERATOR_SERVER = Boolean.parseBoolean(useGenServer);
 	}
 
 	private ModelGenerationStartedResult generateModelLocal(PushWebDocumentAccess document, int randomSeed){
@@ -69,8 +69,8 @@ public class ModelGenerationService {
 				var worker = remoteWorkerProvider.get();
 				worker.setState(pushState, randomSeed, timeoutSec);
 				var manager = pushState.getModelGenerationManager();
-				boolean canceled = manager.setActiveModelGenerationWorker(worker, cancelIndicator);
 				worker.start();
+				boolean canceled = manager.setActiveModelGenerationWorker(worker, cancelIndicator);
 				if (canceled) {
 					worker.cancel();
 					operationCanceledManager.throwOperationCanceledException();
