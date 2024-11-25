@@ -19,21 +19,13 @@ public class GeneratorServerEndpoint {
 	@OnWebSocketOpen
 	public void onWebSocketOpen(Session session)
 	{
-		// The WebSocket endpoint has been opened.
-		System.out.println("onOpen");
-
-		// Store the session to be able to send data to the remote peer.
+		LOG.debug("WebSocket session open! {}", session);
 		this.session = session;
-
-		// You may immediately send a message to the remote peer.
-		//session.sendText("Connected", Callback.NOOP);
 	}
 
 	@OnWebSocketMessage
 	public void onWebSocketText(String message)
 	{
-		System.out.println("onTextMessage");
-
 		//Parsing json message
 		JsonObject jsonMessage = JsonParser.parseString(message).getAsJsonObject();
 		var type = jsonMessage.get("type").getAsString();
@@ -50,38 +42,6 @@ public class GeneratorServerEndpoint {
 		if (type.equals("cancel")){
 			ModelGeneratorDispatcher.getInstance().cancelGenerationRequest(uuid);
 		}
-
-		// A WebSocket text message is received.
-		//session.sendText(message, Callback.NOOP);
-
-		// Discard the message, and demand for more events.
-		//session.demand();
-	}
-
-	@OnWebSocketMessage
-	public void onWebSocketBinary(ByteBuffer payload, Callback callback)
-	{
-		// A WebSocket binary message is received.
-
-		// Save only PNG images.
-		boolean isPNG = true;
-		byte[] pngBytes = new byte[]{(byte)0x89, 'P', 'N', 'G'};
-		for (int i = 0; i < pngBytes.length; ++i)
-		{
-			if (pngBytes[i] != payload.get(i))
-			{
-				// Not a PNG image.
-				isPNG = false;
-				break;
-			}
-		}
-
-
-		// Complete the callback to release the payload ByteBuffer.
-		callback.succeed();
-
-		// Demand for more events.
-		//session.demand();
 	}
 
 	@OnWebSocketError
@@ -92,16 +52,12 @@ public class GeneratorServerEndpoint {
 
 		// You may log the error.
 		cause.printStackTrace();
-
-		// You may dispose resources.
-		//disposeResources();
 	}
 
 	@OnWebSocketClose
 	public void onWebSocketClose(int statusCode, String reason)
 	{
-		LOG.info("WebSocket close! Status:{} - Reason(UUID):{}", statusCode, reason);
+		LOG.debug("WebSocket close! Status:{} - Reason(UUID):{}", statusCode, reason);
 		ModelGeneratorDispatcher.getInstance().disconnect(UUID.fromString(reason));
-		//disposeResources();
 	}
 }

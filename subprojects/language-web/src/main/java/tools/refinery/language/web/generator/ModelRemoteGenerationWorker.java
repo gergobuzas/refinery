@@ -1,15 +1,7 @@
 package tools.refinery.language.web.generator;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
-import org.eclipse.jetty.websocket.api.Callback;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.*;
-import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.eclipse.xtext.service.OperationCanceledManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,14 +11,10 @@ import tools.refinery.language.web.semantics.PartialInterpretation2Json;
 import tools.refinery.language.web.semantics.metadata.MetadataCreator;
 import tools.refinery.language.web.semantics.metadata.NodeMetadata;
 import tools.refinery.language.web.semantics.metadata.RelationMetadata;
-import tools.refinery.language.web.semantics.metadata.RelationMetadataGson;
 import tools.refinery.language.web.xtext.server.ThreadPoolExecutorServiceProvider;
 import tools.refinery.language.web.xtext.server.push.PushWebDocument;
 import tools.refinery.store.util.CancellationToken;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
@@ -68,7 +56,6 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 		client = new GeneratorWebSocketEndpoint();
 		client.setTimeoutSec(timeoutSec);
 		client.setUuidOfWorker(uuid);
-		System.out.println(uuid);
 	}
 
 	public ModelRemoteGenerationWorker(){
@@ -146,7 +133,6 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 
 	@Override
 	public ModelGenerationResult doRun() throws Exception {
-		System.out.println("doRun()");
 		cancellationToken.checkCancelled();
 		try {
 			boolean success = client.sendGenerationRequest(text, randomSeed);
@@ -164,7 +150,6 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 				if (!passed)
 					return errorResult;
 			}
-			System.out.println("End of the SERVER_RESPONSEs");
 			//Getting nodes metadata
 			var nodesMetaData = checkForNodesMetadata();
 			cancellationToken.checkCancelled();
@@ -173,7 +158,7 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			cancellationToken.checkCancelled();
 			//Getting partial Interpretation
 			var partialInterpretation = checkForPartialInterpretation();
-			LOG.info("Received all generation metadata!....");
+			LOG.debug("Received all generation metadata!....");
 
 			client.close();
 			return new ModelGenerationSuccessResult(uuid, nodesMetaData, relationsMetaData, partialInterpretation);
@@ -189,7 +174,6 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 
 	@Override
 	public void run(){
-		System.out.println("run()");
 		startTimeout();
 		notifyResult(new ModelGenerationStatusResult(uuid, "Initializing model generator"));
 		ModelGenerationResult result;
@@ -209,7 +193,6 @@ public class ModelRemoteGenerationWorker implements IGenerationWorker, Runnable 
 			}
 			return;
 		}
-		System.out.println(result);
 		notifyResult(result);
 		//Thread.currentThread().interrupt();
 	}

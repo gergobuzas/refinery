@@ -2,7 +2,6 @@ package tools.refinery.generator.server;
 
 import com.google.gson.*;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.xtext.service.OperationCanceledManager;
@@ -68,7 +67,6 @@ public class ModelGeneratorExecutor extends Thread {
 		objectToSend.addProperty("type", "result");
 		objectToSend.addProperty("message", message);
 		var jsonStringToSend = objectToSend.toString();
-		System.out.println(jsonStringToSend);
 		session.sendText(jsonStringToSend, Callback.NOOP);
 	}
 
@@ -93,7 +91,6 @@ public class ModelGeneratorExecutor extends Thread {
 	}
 
 	private void sendRelationsMetadata(List<RelationMetadata> relationsMetadata){
-		System.out.println(relationsMetadata);
 		JsonObject objectToSend = new JsonObject();
 		objectToSend.addProperty("type", "relationsMetadata");
 
@@ -103,7 +100,6 @@ public class ModelGeneratorExecutor extends Thread {
 		objectToSend.add("object", metaDataArray);
 
 		var objectToSendString = objectToSend.toString();
-		System.out.println(objectToSendString);
 		session.sendText(objectToSendString, Callback.NOOP);
 	}
 

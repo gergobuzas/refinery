@@ -80,7 +80,6 @@ public class ModelGenerationService {
 		});
 	}
 
-
 	public ModelGenerationStartedResult generateModel(PushWebDocumentAccess document, int randomSeed) {
 		if (USE_GENERATOR_SERVER) {
 			return generateModelRemote(document, randomSeed);

@@ -1,17 +1,10 @@
 package tools.refinery.generator.server;
 
-import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.eclipse.jetty.websocket.api.Session;
-import tools.refinery.generator.ModelGenerator;
-import tools.refinery.language.ProblemRuntimeModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.refinery.language.ProblemStandaloneSetup;
-import tools.refinery.language.model.problem.Problem;
-import tools.refinery.language.web.ProblemWebModule;
-import tools.refinery.language.web.ProblemWebSetup;
-
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -23,6 +16,7 @@ import java.util.UUID;
 * */
 
 public class ModelGeneratorDispatcher {
+	private static final Logger LOG = LoggerFactory.getLogger(ModelGeneratorDispatcher.class);
 	HashMap<UUID, ModelGeneratorExecutor> threadPool;
 	private static ModelGeneratorDispatcher instance = null;
 
@@ -34,6 +28,7 @@ public class ModelGeneratorDispatcher {
 	}
 
 	public void addGenerationRequest(UUID uuid, Long randomSeed, String problemString, Session webSocketSession){
+		LOG.debug("Adding generation request to the dispatcher for uuid: {}", uuid);
 		Injector injector = new ProblemStandaloneSetup().createInjectorAndDoEMFRegistration();
 		ModelGeneratorExecutor threadOfExecution = injector.getInstance(ModelGeneratorExecutor.class);
 		threadOfExecution.initialize(randomSeed, problemString, webSocketSession);
@@ -48,6 +43,7 @@ public class ModelGeneratorDispatcher {
 
 	public void disconnect(UUID uuid) {
 		ModelGeneratorExecutor threadOfExecution = threadPool.get(uuid);
+		LOG.debug("Removing generation thread from the dispatcher for uuid: {}", uuid);
 		threadPool.remove(uuid);
 		threadOfExecution.disconnect();
 	}
